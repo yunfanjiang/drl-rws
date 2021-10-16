@@ -20,7 +20,8 @@ from __future__ import print_function
 
 import argparse
 import json
-
+import os
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 import numpy as np
 import pygame
 
@@ -85,6 +86,7 @@ class PyGameRandomAgent(object):
 
   def _render_observation(self, observation):
     obs = np.transpose(observation, (1, 0, 2))
+    print(obs.shape)
     surface = pygame.surfarray.make_surface(obs)
     rect = surface.get_rect()
     surf = pygame.transform.scale(
@@ -95,6 +97,8 @@ class PyGameRandomAgent(object):
 
   def step(self, timestep):
     """Renders timestep and returns random actions according to spec."""
+    #print(timestep.observation)
+    print('layer1', timestep.observation[self._observation_name].shape)
     self._render_observation(timestep.observation[self._observation_name])
     display_score_dirty = False
     if timestep.reward is not None:
