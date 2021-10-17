@@ -26,8 +26,8 @@ def spec2space(spec: dm_env.specs, name: Optional[str] = None):
             )
     elif isinstance(spec, specs.Array):
         if spec.dtype == "int32":
-            # observation is index of piece, max = 37, min = 0
-            return spaces.Box(shape=spec.shape, dtype=spec.dtype, low=0, high=37,)
+            # observation is index of piece, max = 41, min = 0
+            return spaces.Box(shape=spec.shape, dtype=spec.dtype, low=0, high=41,)
         elif spec.dtype == "uint8":
             # image observation
             return spaces.Box(shape=spec.shape, dtype=spec.dtype, low=0, high=255)

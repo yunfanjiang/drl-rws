@@ -18,6 +18,7 @@ class RPSEnv(gym.Env):
         # create dmlab2d rps_env
         settings = {
             "levelName": "running_with_scissors",
+            "numPlayers": "2",
         }
         obs = ["1.LAYER"] if state_obs else ["1.RGB"]
         if centralized_critic:
@@ -33,7 +34,9 @@ class RPSEnv(gym.Env):
         self._action_space = gym.spaces.Discrete(30)
 
         # compute the action mapping from cartesian product
-        self._action_heads = [head for head in self._env.action_spec().keys()]
+        self._action_heads = [
+            head for head in self._env.action_spec().keys() if head.startswith("1.")
+        ]
         self._action_map = {}
         move_actions = [0, 1, 2, 3, 4]
         turn_actions = [-1, 0, 1]
