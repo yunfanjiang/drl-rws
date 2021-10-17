@@ -9,3 +9,6 @@ CS238 Final Project Running with Scissors
 ## Examples
 ### Random Agent
 `python examples/random_rps.py`
+
+### Simple PPO
+`python examples/simple_ppo.py`
