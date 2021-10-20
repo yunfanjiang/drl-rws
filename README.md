@@ -2,6 +2,14 @@
 CS238 Final Project Running with Scissors
 
 ## Setup
+Install dependencies
+
+`git clone https://github.com/yunfanjiang/meltingpot && cd meltingpot`
+
+`pip install .`
+
+Install this repo as develop mode
+
 `git clone https://github.com/yunfanjiang/cs238-rps && cd cs238-rps`
 
 `pip install -e .`
