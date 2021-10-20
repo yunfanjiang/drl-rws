@@ -1,52 +1,46 @@
 from typing import Optional
 
 import gym
-import dmlab2d
 import numpy as np
-from dmlab2d import runfiles_helper
+from meltingpot.python import scenario
+from ml_collections import config_dict
 
-from rps.rps_env.utils import spec2space
+
+ALL_SPACES = {
+    "RGB": gym.spaces.Box(low=0, high=255, shape=(40, 40, 3), dtype=np.uint8,),
+    "INVENTORY": gym.spaces.Box(low=0, high=np.inf, shape=(3,), dtype=np.float32,),
+    "READY_TO_SHOOT": gym.spaces.Box(low=0, high=np.inf, shape=(1,), dtype=np.float32,),
+    "LAYER": gym.spaces.Box(low=0, high=41, shape=(5, 5, 11), dtype=np.int32,),
+    "WORLD.RGB": gym.spaces.Box(low=0, high=255, shape=(120, 184, 3), dtype=np.uint8,),
+}
 
 
 class RPSEnv(gym.Env):
     def __init__(
         self,
+        scenario_name="running_with_scissors_in_the_matrix_1",
         state_obs: bool = True,
         centralized_critic: bool = False,
         seed: Optional[int] = None,
     ):
-        # create dmlab2d rps_env
-        settings = {
-            "levelName": "running_with_scissors",
-            "numPlayers": "2",
-        }
-        obs = ["1.LAYER"] if state_obs else ["1.RGB"]
-        if centralized_critic:
-            obs.append("WORLD.RGB")
-        lab2d = dmlab2d.Lab2d(runfiles_helper.find(), settings,)
-        self._env = dmlab2d.Environment(lab2d, obs, seed)
+        # create rwc env
+        scenario_config = scenario.get_config(scenario_name)
+        self._env = scenario.build(config_dict.ConfigDict(scenario_config))
+        self._env._rng = np.random.RandomState(seed=seed)
 
         self._last_observation = None
 
         # observation space and action space
-        obs_spec = self._env.observation_spec()
-        self._obs_space = spec2space(obs_spec)
-        self._action_space = gym.spaces.Discrete(30)
-
-        # compute the action mapping from cartesian product
-        self._action_heads = [
-            head for head in self._env.action_spec().keys() if head.startswith("1.")
-        ]
-        self._action_map = {}
-        move_actions = [0, 1, 2, 3, 4]
-        turn_actions = [-1, 0, 1]
-        fire_actions = [0, 1]
-        idx = 0
-        for move in move_actions:
-            for turn in turn_actions:
-                for fire in fire_actions:
-                    self._action_map[idx] = (move, turn, fire)
-                    idx += 1
+        obs_keys = ["INVENTORY", "READY_TO_SHOOT"]
+        if state_obs:
+            obs_keys.append("LAYER")
+        else:
+            obs_keys.append("RGB")
+        if centralized_critic:
+            obs_keys.append("WORLD.RGB")
+        obs_space = {k: ALL_SPACES[k] for k in obs_keys}
+        self._obs_space = gym.spaces.Dict(obs_space)
+        self._action_space = gym.spaces.Discrete(self._env.action_spec()[0].num_values)
 
     @property
     def observation_space(self):
@@ -61,16 +55,19 @@ class RPSEnv(gym.Env):
 
     def reset(self):
         timestep = self._env.reset()
-        self._last_observation = timestep.observation
-        return timestep.observation
+        obs = timestep.observation[0]
+        obs["READY_TO_SHOOT"] = np.expand_dims(obs["READY_TO_SHOOT"], axis=0)
+        self._last_observation = obs
+        return obs
 
-    def step(self, action: np.ndarray):
-        assert action < len(self._action_map)
-        primitive_action = self._action_map[int(action)]
-        converted_action = {
-            head: primitive_action[i] for i, head in enumerate(self._action_heads)
-        }
-        timestep = self._env.step(converted_action)
-        self._last_observation = timestep.observation
-        reward = timestep.reward or 0.0
-        return timestep.observation, reward, timestep.last(), {}
+    def step(self, action):
+        if isinstance(action, int):
+            action = [action]
+        elif isinstance(action, np.int64) and action.ndim == 0:
+            action = [action.item()]
+        timestep = self._env.step(action)
+        obs = timestep.observation[0]
+        obs["READY_TO_SHOOT"] = np.expand_dims(obs["READY_TO_SHOOT"], axis=0)
+        self._last_observation = obs
+        reward = timestep.reward[0] or 0.0
+        return obs, reward, timestep.last(), {}
