@@ -1,5 +1,6 @@
 from stable_baselines3.a2c import A2C, MultiInputPolicy
 from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.monitor import Monitor
 
 from rps import RPSEnv
 from rps.models import StateObsExtractor
@@ -7,6 +8,7 @@ from rps.models import StateObsExtractor
 
 if __name__ == "__main__":
     env = RPSEnv()
+    env = Monitor(env)
     vec_env = DummyVecEnv([lambda: env for _ in range(32)])
 
     model = A2C(
