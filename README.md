@@ -6,7 +6,7 @@ Install dependencies
 
 `git clone https://github.com/yunfanjiang/meltingpot && cd meltingpot`
 
-`pip install .`
+`pip install -e .`
 
 Install this repo as develop mode
 
