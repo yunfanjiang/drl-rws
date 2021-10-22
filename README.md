@@ -21,7 +21,7 @@ Install this repo as develop mode
 ### Simple PPO
 `python examples/simple_ppo.py`
 
-## Sample colab setup
+## Example colab setup
 
 ### Get customized meltingpot repo:
 `!git clone https://github.com/yunfanjiang/meltingpot`
