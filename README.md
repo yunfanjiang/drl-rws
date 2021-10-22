@@ -20,3 +20,15 @@ Install this repo as develop mode
 
 ### Simple PPO
 `python examples/simple_ppo.py`
+
+## Sample colab setup
+
+`!git clone https://github.com/yunfanjiang/meltingpot`
+`%cd meltingpot/`
+`pip install -e .`
+`!git clone https://<github-token>@github.com/yunfanjiang/cs238-rps.git`
+`%cd ../cs238-rps/`
+`pip install -e .`
+`pip install pip/*`
+`pip install -r requirements.txt`
+`!python examples/simple_ppo.py`
