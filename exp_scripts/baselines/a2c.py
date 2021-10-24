@@ -1,8 +1,7 @@
 import argparse
 
 from stable_baselines3.a2c import A2C, MultiInputPolicy
-from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.vec_env import DummyVecEnv, VecMonitor
 
 from rps import RPSEnv
 from rps.models import StateObsExtractor
@@ -23,9 +22,10 @@ def train(args):
         raise ValueError
 
     def env_fn():
-        return Monitor(RPSEnv(scenario_name=scenario_name))
+        return RPSEnv(scenario_name=scenario_name)
 
     vec_env = DummyVecEnv([env_fn for _ in range(args.n_envs)])
+    vec_env = VecMonitor(vec_env)
 
     model = A2C(
         policy=MultiInputPolicy,
