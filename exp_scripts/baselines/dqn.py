@@ -10,7 +10,7 @@ from rps.models import StateObsExtractor
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--policy', type=str, default='semi-pure',
-      choices = ['semi-pure','pure_rock','pure_paper','pure_scissor'],
+      choices = ['semi_pure','pure_rock','pure_paper','pure_scissor'],
       help="policy of the opponenet player")
     args = parser.parse_args()
     if args.policy == 'semi-pure':
