@@ -2,8 +2,7 @@ from stable_baselines3.ppo import PPO, MultiInputPolicy
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.monitor import Monitor
 from argparse import ArgumentParser
-from constants import (Policy,
-                       POLICY_SCENARIO_MAP)
+from constants import Policy, POLICY_SCENARIO_MAP
 
 from rps import RPSEnv
 from rps.models import StateObsExtractor
@@ -11,29 +10,21 @@ from rps.models import StateObsExtractor
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument(
-      "--oppo-policy",
-      type=Policy,
-      choices=list(Policy),
-      default="semi_pure",
-      help="policy for opponent."
+        "--oppo-policy",
+        type=Policy,
+        choices=list(Policy),
+        default="semi_pure",
+        help="policy for opponent.",
+    )
+    parser.add_argument("--lr", type=float, default=4e-4, help="learning rate.")
+    parser.add_argument(
+        "--tb-log-dir", type=str, default=None, help="tensorboard log directory."
     )
     parser.add_argument(
-      "--lr",
-      type=float,
-      default=4e-4,
-      help="learning rate."
-    )
-    parser.add_argument(
-      "--tb-log-dir",
-      type=str,
-      default=None,
-      help="tensorboard log directory."
-    )
-    parser.add_argument(
-      "--timesteps",
-      type=float,
-      default=1e6,
-      help="total number of timesteps to train the policy."
+        "--timesteps",
+        type=float,
+        default=1e6,
+        help="total number of timesteps to train the policy.",
     )
     args = parser.parse_args()
 
