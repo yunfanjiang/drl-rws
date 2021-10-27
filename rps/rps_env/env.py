@@ -38,6 +38,9 @@ class RPSEnv(gym.Env):
             obs_keys.append("RGB")
         if centralized_critic:
             obs_keys.append("WORLD.RGB")
+        self._state_obs = state_obs
+        self._centralized_critic = centralized_critic
+
         obs_space = {k: ALL_SPACES[k] for k in obs_keys}
         self._obs_space = gym.spaces.Dict(obs_space)
         self._action_space = gym.spaces.Discrete(self._env.action_spec()[0].num_values)
@@ -56,7 +59,7 @@ class RPSEnv(gym.Env):
     def reset(self):
         timestep = self._env.reset()
         obs = timestep.observation[0]
-        obs["READY_TO_SHOOT"] = np.expand_dims(obs["READY_TO_SHOOT"], axis=0)
+        obs = self._obs_postprocess(obs)
         self._last_observation = obs
         return obs
 
@@ -67,7 +70,17 @@ class RPSEnv(gym.Env):
             action = [action.item()]
         timestep = self._env.step(action)
         obs = timestep.observation[0]
-        obs["READY_TO_SHOOT"] = np.expand_dims(obs["READY_TO_SHOOT"], axis=0)
+        obs = self._obs_postprocess(obs)
         self._last_observation = obs
         reward = timestep.reward[0] or 0.0
         return obs, reward, timestep.last(), {}
+
+    def _obs_postprocess(self, obs):
+        obs["INVENTORY"] = np.float32(obs["INVENTORY"])
+        obs["READY_TO_SHOOT"] = np.float32(obs["READY_TO_SHOOT"])
+        obs["READY_TO_SHOOT"] = np.expand_dims(obs["READY_TO_SHOOT"], axis=0)
+        if self._state_obs:
+            del obs["RGB"]
+        if not self._centralized_critic:
+            del obs["WORLD.RGB"]
+        return obs
