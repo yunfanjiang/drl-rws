@@ -72,7 +72,7 @@ class RPSEnv(gym.Env):
         obs = timestep.observation[0]
         obs = self._obs_postprocess(obs)
         self._last_observation = obs
-        reward = timestep.reward[0] or 0.0
+        reward = timestep.reward[0].item()
         return obs, reward, timestep.last(), {}
 
     def _obs_postprocess(self, obs):
