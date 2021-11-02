@@ -1,1 +1,1 @@
-from .env import RPSEnv
+from .env import RPSEnv, RPSEnvNoBot
