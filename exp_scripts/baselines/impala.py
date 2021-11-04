@@ -41,8 +41,10 @@ def train(args):
     config["lr"] = args.lr
     config["gamma"] = args.gamma
     config["entropy_coeff"] = args.entropy_coeff
-    config["train_batch_size"] = args.train_batch_size
-    config["rollout_fragment_length"] = args.rollout_fragment_length
+    config["replay_proportion"] = args.replay_proportion
+
+    # timeout time
+    config["learner_queue_timeout"] = args.learner_queue_timeout
 
     # instantiate trainer
     trainer = impala.ImpalaTrainer(config=config, env="rws")
@@ -74,7 +76,7 @@ if __name__ == "__main__":
         "--num_envs_per_worker", type=int, default=1,
     )
     parser.add_argument(
-        "--num_gpus", type=int, default=0, required=True,
+        "--num_gpus", type=int, default=1,
     )
 
     # hyper-parameters
@@ -88,10 +90,12 @@ if __name__ == "__main__":
         "--entropy_coeff", type=float, default=0.003,
     )
     parser.add_argument(
-        "--train_batch_size", type=int, default=32,
+        "--replay_proportion", type=float, default=0.2,
     )
+
+    # timeout time
     parser.add_argument(
-        "--rollout_fragment_length", type=int, default=50,
+        "--learner_queue_timeout", type=int, default=999999,
     )
 
     # train steps
