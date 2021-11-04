@@ -1,9 +1,8 @@
-import os
 import argparse
 
 import ray
-from tqdm import tqdm
 import ray.rllib.agents.a3c as a3c
+from ray.tune import tune
 
 import rps
 import rps.models
@@ -20,6 +19,7 @@ def train(args):
     config["framework"] = "torch"
 
     # env related config
+    config["env"] = "rws"
     config["env_config"] = {
         "scenario_name": scenario_name,
         "state_obs": True,
@@ -42,15 +42,11 @@ def train(args):
     config["lr"] = args.lr
     config["gamma"] = args.gamma
     config["entropy_coeff"] = args.entropy_coeff
-    config["train_batch_size"] = args.train_batch_size
-    config["rollout_fragment_length"] = args.rollout_fragment_length
 
-    # instantiate trainer
-    trainer = a3c.A3CTrainer(config=config, env="rws")
-
-    # start training
-    for _ in tqdm(range(int(args.train_steps))):
-        trainer.train()
+    # run tune
+    tune.run(
+        "A3C", config=config, name=args.exp_name,
+    )
 
 
 if __name__ == "__main__":
@@ -63,6 +59,12 @@ if __name__ == "__main__":
         choices=["pure", "semi_pure", "pure_rock", "pure_paper", "pure_scissor"],
         required=True,
     )
+
+    # experiment name
+    parser.add_argument(
+        "--exp_name", type=str, required=True,
+    )
+
     parser.add_argument(
         "--seed", type=int, default=0,
     )
@@ -88,17 +90,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--entropy_coeff", type=float, default=0.003,
     )
-    parser.add_argument(
-        "--train_batch_size", type=int, default=32,
-    )
-    parser.add_argument(
-        "--rollout_fragment_length", type=int, default=20,
-    )
 
-    # train steps
-    parser.add_argument(
-        "--train_steps", type=float, default=1e9,
-    )
     args = parser.parse_args()
 
     train(args)
