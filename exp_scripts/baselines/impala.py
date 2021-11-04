@@ -42,6 +42,7 @@ def train(args):
     config["gamma"] = args.gamma
     config["entropy_coeff"] = args.entropy_coeff
     config["replay_proportion"] = args.replay_proportion
+    config["replay_buffer_num_slots"] = args.replay_buffer_num_slots
 
     # timeout time
     config["learner_queue_timeout"] = args.learner_queue_timeout
@@ -91,6 +92,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--replay_proportion", type=float, default=0.2,
+    )
+    parser.add_argument(
+        "replay_buffer_num_slots", type=int, default=128,
     )
 
     # timeout time
