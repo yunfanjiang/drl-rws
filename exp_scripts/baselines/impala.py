@@ -94,7 +94,7 @@ if __name__ == "__main__":
         "--replay_proportion", type=float, default=0.2,
     )
     parser.add_argument(
-        "replay_buffer_num_slots", type=int, default=128,
+        "--replay_buffer_num_slots", type=int, default=128,
     )
 
     # timeout time
