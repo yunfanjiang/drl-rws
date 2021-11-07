@@ -15,7 +15,7 @@ ALL_SPACES = {
     "POSITION": gym.spaces.Box(low=-np.inf, high=np.inf, shape=(2,), dtype=np.float32,),
     "ORIENTATION": gym.spaces.Box(low=0, high=3, shape=(1,), dtype=np.int32),
     "INTERACTION_INVENTORIES": gym.spaces.Box(
-        low=0, high=np.inf, shape=(6,), dtype=np.float32
+        low=-np.inf, high=np.inf, shape=(6,), dtype=np.float32
     ),
 }
 
