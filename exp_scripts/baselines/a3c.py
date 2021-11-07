@@ -44,9 +44,7 @@ def train(args):
     config["entropy_coeff"] = args.entropy_coeff
 
     # run tune
-    tune.run(
-        "A3C", config=config, name=args.exp_name,
-    )
+    tune.run("A3C", config=config, name=args.exp_name, local_dir=args.local_dir)
 
 
 if __name__ == "__main__":
@@ -60,9 +58,12 @@ if __name__ == "__main__":
         required=True,
     )
 
-    # experiment name
+    # experiment name and save dir
     parser.add_argument(
         "--exp_name", type=str, required=True,
+    )
+    parser.add_argument(
+        "--local_dir", type=str,
     )
 
     parser.add_argument(
