@@ -1,8 +1,8 @@
 import argparse
 
 import ray
-from tqdm import tqdm
 import ray.rllib.agents.impala as impala
+from ray.tune import tune
 
 import rps
 import rps.models
@@ -19,6 +19,7 @@ def train(args):
     config["framework"] = "torch"
 
     # env related config
+    config["env"] = "rws"
     config["env_config"] = {
         "scenario_name": scenario_name,
         "state_obs": True,
@@ -41,22 +42,19 @@ def train(args):
     config["lr"] = args.lr
     config["gamma"] = args.gamma
     config["entropy_coeff"] = args.entropy_coeff
-    config["replay_proportion"] = args.replay_proportion
-    config["replay_buffer_num_slots"] = args.replay_buffer_num_slots
 
-    # timeout time
-    config["learner_queue_timeout"] = args.learner_queue_timeout
-
-    # instantiate trainer
-    trainer = impala.ImpalaTrainer(config=config, env="rws")
-
-    # start training
-    for _ in tqdm(range(int(args.train_steps))):
-        trainer.train()
+    # run tune
+    tune.run(
+        "IMPALA",
+        config=config,
+        name=args.exp_name,
+        local_dir=args.local_dir,
+        resume=args.resume,
+    )
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("Impala RWS sanity check")
+    parser = argparse.ArgumentParser("IMPALA RWS sanity check")
 
     # env related config
     parser.add_argument(
@@ -65,8 +63,22 @@ if __name__ == "__main__":
         choices=["pure", "semi_pure", "pure_rock", "pure_paper", "pure_scissor"],
         required=True,
     )
+
+    # experiment name and save dir
+    parser.add_argument(
+        "--exp_name", type=str, required=True,
+    )
+    parser.add_argument(
+        "--local_dir", type=str,
+    )
+
     parser.add_argument(
         "--seed", type=int, default=0,
+    )
+
+    # resume training
+    parser.add_argument(
+        "--resume", action="store_true",
     )
 
     # computation resource related config
@@ -77,7 +89,7 @@ if __name__ == "__main__":
         "--num_envs_per_worker", type=int, default=1,
     )
     parser.add_argument(
-        "--num_gpus", type=int, default=1,
+        "--num_gpus", type=int, default=0, required=True,
     )
 
     # hyper-parameters
@@ -90,22 +102,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--entropy_coeff", type=float, default=0.003,
     )
-    parser.add_argument(
-        "--replay_proportion", type=float, default=0.2,
-    )
-    parser.add_argument(
-        "--replay_buffer_num_slots", type=int, default=128,
-    )
 
-    # timeout time
-    parser.add_argument(
-        "--learner_queue_timeout", type=int, default=999999,
-    )
-
-    # train steps
-    parser.add_argument(
-        "--train_steps", type=float, default=1e9,
-    )
     args = parser.parse_args()
 
     train(args)
