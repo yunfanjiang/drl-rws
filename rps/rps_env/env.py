@@ -12,6 +12,11 @@ ALL_SPACES = {
     "READY_TO_SHOOT": gym.spaces.Box(low=0, high=np.inf, shape=(1,), dtype=np.float32,),
     "LAYER": gym.spaces.Box(low=0, high=41, shape=(5, 5, 11), dtype=np.int32,),
     "WORLD.RGB": gym.spaces.Box(low=0, high=255, shape=(120, 184, 3), dtype=np.uint8,),
+    "POSITION": gym.spaces.Box(low=-np.inf, high=np.inf, shape=(2,), dtype=np.float32,),
+    "ORIENTATION": gym.spaces.Box(low=0, high=3, shape=(1,), dtype=np.int32),
+    "INTERACTION_INVENTORIES": gym.spaces.Box(
+        low=0, high=np.inf, shape=(6,), dtype=np.float32
+    ),
 }
 
 
@@ -31,7 +36,13 @@ class RPSEnv(gym.Env):
         self._last_observation = None
 
         # observation space and action space
-        obs_keys = ["INVENTORY", "READY_TO_SHOOT"]
+        obs_keys = [
+            "INVENTORY",
+            "READY_TO_SHOOT",
+            "POSITION",
+            "ORIENTATION",
+            "INTERACTION_INVENTORIES",
+        ]
         if state_obs:
             obs_keys.append("LAYER")
         else:
@@ -79,6 +90,13 @@ class RPSEnv(gym.Env):
         obs["INVENTORY"] = np.float32(obs["INVENTORY"])
         obs["READY_TO_SHOOT"] = np.float32(obs["READY_TO_SHOOT"])
         obs["READY_TO_SHOOT"] = np.expand_dims(obs["READY_TO_SHOOT"], axis=0)
+        obs["POSITION"] = np.float32(obs["POSITION"])
+        obs["ORIENTATION"] = np.int32(obs["ORIENTATION"])
+        obs["ORIENTATION"] = np.expand_dims(obs["ORIENTATION"], axis=0)
+        obs["INTERACTION_INVENTORIES"] = np.reshape(
+            obs["INTERACTION_INVENTORIES"], (6,)
+        )
+        obs["INTERACTION_INVENTORIES"] = np.float32(obs["INTERACTION_INVENTORIES"])
         if self._state_obs:
             del obs["RGB"]
         if not self._centralized_critic:

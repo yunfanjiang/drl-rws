@@ -28,10 +28,16 @@ class BaselineModel(TorchModelV2, nn.Module):
 
         embed_dim = model_config.get("embed_dim", 8)
         num_embeddings = model_config.get("num_embeddings", 42)
+        orientation_emb_dim = model_config.get("orientation_emb_dim", 4)
+        orientation_n_emb = model_config.get("orientation_n_emb", 4)
         feature_dim = model_config.get("feature_dim", 256)
         layer_obs_shape = model_config.get("layer_obs_shape", (5, 5, 11))
         inventory_shape = model_config.get("inventory_shape", 3)
         shoot_ready_shape = model_config.get("shoot_ready_shape", 1)
+        position_shape = model_config.get("position_shape", 2)
+        interaction_inventories_shape = model_config.get(
+            "interaction_inventories_shape", 6
+        )
         pi_config = model_config.get(
             "pi_config",
             {
@@ -58,8 +64,16 @@ class BaselineModel(TorchModelV2, nn.Module):
         self._emb = nn.Embedding(
             num_embeddings=num_embeddings, embedding_dim=embed_dim,
         )
+        self._ori_emb = nn.Embedding(
+            num_embeddings=orientation_n_emb, embedding_dim=orientation_emb_dim,
+        )
         self._feature_hidden = nn.Linear(
-            np.prod(layer_obs_shape) * embed_dim + inventory_shape + shoot_ready_shape,
+            np.prod(layer_obs_shape) * embed_dim
+            + inventory_shape
+            + shoot_ready_shape
+            + orientation_emb_dim
+            + position_shape
+            + interaction_inventories_shape,
             feature_dim,
         )
         # policy MLP
@@ -79,8 +93,18 @@ class BaselineModel(TorchModelV2, nn.Module):
         obs = input_dict["obs"]
         layer_emb = self._emb(obs["LAYER"].long())
         layer_emb = layer_emb.view(layer_emb.shape[0], -1)
+        ori_emb = self._ori_emb(obs["ORIENTATION"].long())
+        ori_emb = ori_emb.view(ori_emb.shape[0], -1)
         feature_cat = torch.cat(
-            [layer_emb, obs["INVENTORY"], obs["READY_TO_SHOOT"]], dim=-1,
+            [
+                layer_emb,
+                obs["INVENTORY"],
+                obs["READY_TO_SHOOT"],
+                ori_emb,
+                obs["POSITION"],
+                obs["INTERACTION_INVENTORIES"],
+            ],
+            dim=-1,
         )
         self._features = F.relu(self._feature_hidden(feature_cat))
 
