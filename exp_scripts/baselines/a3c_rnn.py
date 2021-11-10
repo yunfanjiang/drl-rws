@@ -27,7 +27,7 @@ def train(args):
     config["env_config"] = {
         "scenario_name": scenario_name,
         "state_obs": True,
-        "centralized_critic": False,
+        "centralized_critic": args.cc,
         "seed": args.seed,
     }
 
@@ -100,9 +100,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--entropy_coeff", type=float, default=0.003,
     )
-
     parser.add_argument(
       "--use_rnn", action = 'store_true',
+    )
+    parser.add_argument(
+      "--cc",help="centralized_critic", action='store_false',
     )
     args = parser.parse_args()
 
