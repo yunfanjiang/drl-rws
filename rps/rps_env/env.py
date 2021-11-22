@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Optional
 
 import gym
@@ -26,6 +27,7 @@ class RPSEnv(gym.Env):
         scenario_name="running_with_scissors_in_the_matrix_1",
         state_obs: bool = True,
         centralized_critic: bool = False,
+        world_rgb: bool = False,
         seed: Optional[int] = None,
     ):
         # create rwc env
@@ -47,12 +49,25 @@ class RPSEnv(gym.Env):
             obs_keys.append("LAYER")
         else:
             obs_keys.append("RGB")
-        if centralized_critic:
+        if world_rgb:
             obs_keys.append("WORLD.RGB")
+        self._world_rgb = world_rgb
         self._state_obs = state_obs
         self._centralized_critic = centralized_critic
 
         obs_space = {k: ALL_SPACES[k] for k in obs_keys}
+        if centralized_critic:
+            bot_obs_space = deepcopy(obs_space)
+            if world_rgb:
+                bot_obs_space.pop("WORLD.RGB")
+            for k, v in bot_obs_space.items():
+                obs_space[f"BOT_{k}"] = v
+            obs_space["GLOBAL_ACTIONS"] = gym.spaces.MultiDiscrete(
+                [
+                    self._env.action_spec()[0].num_values,
+                    self._env.action_spec()[0].num_values,
+                ]
+            )
         self._obs_space = gym.spaces.Dict(obs_space)
         self._action_space = gym.spaces.Discrete(self._env.action_spec()[0].num_values)
 
@@ -68,9 +83,10 @@ class RPSEnv(gym.Env):
         self._env._rng = np.random.RandomState(seed=seed)
 
     def reset(self):
-        timestep = self._env.reset()
-        obs = timestep.observation[0]
-        obs = self._obs_postprocess(obs)
+        focal_timestep, bot_timestep = self._env.reset()
+        bot_timestep = bot_timestep[0]
+        focal_obs, bot_obs = focal_timestep.observation[0], bot_timestep.observation
+        obs = self._obs_postprocess(focal_obs, bot_obs)
         self._last_observation = obs
         return obs
 
@@ -79,26 +95,53 @@ class RPSEnv(gym.Env):
             action = [action]
         elif isinstance(action, np.int64) and action.ndim == 0:
             action = [action.item()]
-        timestep = self._env.step(action)
-        obs = timestep.observation[0]
-        obs = self._obs_postprocess(obs)
+        focal_timestep, bot_timestep = self._env.step(action)
+        bot_timestep = bot_timestep[0]
+        focal_obs, bot_obs = focal_timestep.observation[0], bot_timestep.observation
+        obs = self._obs_postprocess(focal_obs, bot_obs)
         self._last_observation = obs
-        reward = timestep.reward[0].item()
-        return obs, reward, timestep.last(), {}
+        reward = focal_timestep.reward[0].item()
+        return obs, reward, focal_timestep.last(), {}
 
-    def _obs_postprocess(self, obs):
-        obs["INVENTORY"] = np.float32(obs["INVENTORY"])
-        obs["READY_TO_SHOOT"] = np.float32(obs["READY_TO_SHOOT"])
-        obs["READY_TO_SHOOT"] = np.expand_dims(obs["READY_TO_SHOOT"], axis=0)
-        obs["POSITION"] = np.float32(obs["POSITION"])
-        obs["ORIENTATION"] = np.int32(obs["ORIENTATION"])
-        obs["ORIENTATION"] = np.expand_dims(obs["ORIENTATION"], axis=0)
-        obs["INTERACTION_INVENTORIES"] = np.reshape(
-            obs["INTERACTION_INVENTORIES"], (6,)
+    def _obs_postprocess(self, focal_obs, bot_obs):
+        focal_obs["INVENTORY"] = np.float32(focal_obs["INVENTORY"])
+        focal_obs["READY_TO_SHOOT"] = np.float32(focal_obs["READY_TO_SHOOT"])
+        focal_obs["READY_TO_SHOOT"] = np.expand_dims(
+            focal_obs["READY_TO_SHOOT"], axis=0
         )
-        obs["INTERACTION_INVENTORIES"] = np.float32(obs["INTERACTION_INVENTORIES"])
+        focal_obs["POSITION"] = np.float32(focal_obs["POSITION"])
+        focal_obs["ORIENTATION"] = np.int32(focal_obs["ORIENTATION"])
+        focal_obs["ORIENTATION"] = np.expand_dims(focal_obs["ORIENTATION"], axis=0)
+        focal_obs["INTERACTION_INVENTORIES"] = np.reshape(
+            focal_obs["INTERACTION_INVENTORIES"], (6,)
+        )
+        focal_obs["INTERACTION_INVENTORIES"] = np.float32(
+            focal_obs["INTERACTION_INVENTORIES"]
+        )
         if self._state_obs:
-            del obs["RGB"]
-        if not self._centralized_critic:
-            del obs["WORLD.RGB"]
+            del focal_obs["RGB"]
+        if not self._world_rgb:
+            del focal_obs["WORLD.RGB"]
+
+        obs = focal_obs
+        if self._centralized_critic:
+            obs["BOT_INVENTORY"] = np.float32(bot_obs["INVENTORY"])
+            obs["BOT_READY_TO_SHOOT"] = np.float32(bot_obs["READY_TO_SHOOT"])
+            obs["BOT_READY_TO_SHOOT"] = np.expand_dims(
+                obs["BOT_READY_TO_SHOOT"], axis=0
+            )
+            obs["BOT_POSITION"] = np.float32(bot_obs["POSITION"])
+            obs["BOT_ORIENTATION"] = np.int32(bot_obs["ORIENTATION"])
+            obs["BOT_ORIENTATION"] = np.expand_dims(obs["BOT_ORIENTATION"], axis=0)
+            obs["BOT_INTERACTION_INVENTORIES"] = np.reshape(
+                bot_obs["INTERACTION_INVENTORIES"], (6,)
+            )
+            obs["BOT_INTERACTION_INVENTORIES"] = np.float32(
+                obs["BOT_INTERACTION_INVENTORIES"]
+            )
+            if self._state_obs:
+                obs["BOT_LAYER"] = bot_obs["LAYER"]
+            else:
+                obs["BOT_RGB"] = bot_obs["RGB"]
+            obs["GLOBAL_ACTIONS"] = np.int64(bot_obs["global"]["actions"])
         return obs
