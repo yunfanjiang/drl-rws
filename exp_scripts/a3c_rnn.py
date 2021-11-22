@@ -16,12 +16,13 @@ def train(args):
 
     # initialize ray and configuration
     ray.init()
-    
+
     config = a3c.DEFAULT_CONFIG.copy()
     config["framework"] = "torch"
 
     ModelCatalog.register_custom_model(
-    "rnn", TorchRNNModel if config['framework']=='torch' else RNNModel)
+        "rnn", TorchRNNModel if config["framework"] == "torch" else RNNModel
+    )
     # env related config
     config["env"] = "rws"
     config["env_config"] = {
@@ -38,15 +39,15 @@ def train(args):
 
     # model related config
     if args.use_rnn:
-      config["model"] = {
-          "custom_model": "baseline_model",
-          "custom_model_config": {},
-      }
+        config["model"] = {
+            "custom_model": "baseline_model",
+            "custom_model_config": {},
+        }
     else:
-      config['model'] = {
-          "custom_model" : "rnn",
-          'max_seq_len' : 20,
-      }
+        config["model"] = {
+            "custom_model": "rnn",
+            "max_seq_len": 20,
+        }
     # hyper-parameters related config
     config["lr"] = args.lr
     config["gamma"] = args.gamma
@@ -101,10 +102,10 @@ if __name__ == "__main__":
         "--entropy_coeff", type=float, default=0.003,
     )
     parser.add_argument(
-      "--use_rnn", action = 'store_true',
+        "--use_rnn", action="store_true",
     )
     parser.add_argument(
-      "--cc",help="centralized_critic", action='store_false',
+        "--cc", help="centralized_critic", action="store_false",
     )
     args = parser.parse_args()
 
