@@ -34,21 +34,21 @@ def train(args):
 
     # model related config
     config["model"] = {
-        "custom_model": "baseline_model",
+        "custom_model": "dqn_model",
         "custom_model_config": {},
     }
 
     # hyper-parameters related config
     config["lr"] = args.lr
     config["gamma"] = args.gamma
-    config["entropy_coeff"] = args.entropy_coeff
+    # config["entropy_coeff"] = args.entropy_coeff
 
     # run tune
-    tune.run("A3C", config=config, name=args.exp_name, local_dir=args.local_dir)
+    tune.run("DQN", config=config, name=args.exp_name, local_dir=args.local_dir)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("A2C RWS sanity check")
+    parser = argparse.ArgumentParser("dqn RWS sanity check")
 
     # env related config
     parser.add_argument(
