@@ -1,5 +1,5 @@
-# cs238-rps
-CS238 Final Project Running with Scissors
+# drl-rws
+CS 238 Final Project: Deep Reinforcement Learning Agents that Run with Scissors
 
 ## Setup
 Install dependencies
