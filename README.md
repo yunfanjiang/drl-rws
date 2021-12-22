@@ -1,5 +1,5 @@
 # drl-rws
-CS 238 Final Project: Deep Reinforcement Learning Agents that Run with Scissors
+CS 238 Final Project: Deep Reinforcement Learning Agents that Run with Scissors [[Report](https://web.stanford.edu/class/aa228/cgi-bin/wp/old-projects/#:~:text=Deep%20Reinforcement%20Learning%20Agents%20that%20Run%20with%20Scissors)]
 
 ## Setup
 Install dependencies
